@@ -1,0 +1,13 @@
+version = 0.1
+
+[default]
+[default.deploy]
+[default.deploy.parameters]
+stack_name = "image-recognizer-serverless"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-1q35td65p92iv"
+s3_prefix = "image-recognizer-serverless"
+region = "ap-southeast-1"
+confirm_changeset = true
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = "Environment=\"dev\""
+image_repositories = []
