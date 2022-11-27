@@ -7,7 +7,11 @@ Description: >
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
   Function:
-    Timeout: 3
+    Timeout: 180
+    Runtime: nodejs16.x
+    Architectures:
+      - x86_64
+    CodeUri: app/
 
 Parameters:
   Environment:
@@ -21,11 +25,7 @@ Resources:
   HelloWorldFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
-      CodeUri: app/
       Handler: app.helloWorldHandler
-      Runtime: nodejs16.x
-      Architectures:
-        - x86_64
       Events:
         HelloWorld:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
@@ -46,11 +46,7 @@ Resources:
   RandomNumbersFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
-      CodeUri: app/
       Handler: app.randomNumbersHandler
-      Runtime: nodejs16.x
-      Architectures:
-        - x86_64
       Events:
         RandomNumbers:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
