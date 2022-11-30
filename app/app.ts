@@ -1,48 +1,27 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
+import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
-/**
- *
- * Event doc: https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html#api-gateway-simple-proxy-for-lambda-input-format
- * @param {Object} event - API Gateway Lambda Proxy Input Format
- *
- * Return doc: https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html
- * @returns {Object} object - API Gateway Lambda Proxy Output Format
- *
- */
+const s3Client = new S3Client({
+    region: process.env.AWS_REGION,
+    apiVersion: 'v4',
+});
 
-export const helloWorldHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+export const generatePreSignedUrl = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+    console.log(process.env.AWS_REGION);
+    const body = JSON.parse(event.body!);
 
-    let response: APIGatewayProxyResult;
-    try {
-        response = {
-            statusCode: 200,
-            body: JSON.stringify({
-                data: {
-                    message: 'Hello, World!'
-                }
-            }),
-        };
-    } catch (err: unknown) {
-        console.log(err);
-        response = {
-            statusCode: 500,
-            body: JSON.stringify({
-                message: err instanceof Error ? err.message : 'some error happened',
-            }),
-        };
-    }
-
-    return response;
-};
-
-
-export const randomNumbersHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-    const randomNumbers = [];
-
-    for(let i = 0; i < 100; i++) {
-        randomNumbers.push(i * i);
-    }
-
+    // Create the presigned URL.
+    const signedUrl = await getSignedUrl(
+        s3Client,
+        new PutObjectCommand({
+            Bucket: process.env['imagesBucketName'],
+            Key: body.filename,
+        }),
+        {
+            expiresIn: 3600,
+        },
+    );
 
     let response: APIGatewayProxyResult;
     try {
@@ -50,8 +29,8 @@ export const randomNumbersHandler = async (event: APIGatewayProxyEvent): Promise
             statusCode: 200,
             body: JSON.stringify({
                 data: {
-                    randomNumbers,
-                }
+                    url: signedUrl,
+                },
             }),
         };
     } catch (err: unknown) {
