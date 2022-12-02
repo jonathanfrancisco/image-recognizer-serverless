@@ -1,4 +1,4 @@
-import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
+import { APIGatewayProxyEvent, APIGatewayProxyResult, S3Event } from 'aws-lambda';
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
@@ -44,4 +44,8 @@ export const generatePreSignedUrl = async (event: APIGatewayProxyEvent): Promise
     }
 
     return response;
+};
+
+export const imageRecognizer = async (event: S3Event) => {
+    console.log('S3 Event: ', event);
 };
