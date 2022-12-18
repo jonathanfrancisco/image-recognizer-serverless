@@ -75,6 +75,10 @@ Resources:
           Properties:
             Bucket: !Ref ImagesBucket
             Events: s3:ObjectCreated:*
+      Policies:
+        - RekognitionDetectOnlyPolicy: {}
+        - S3ReadPolicy:
+            BucketName: !Ref ImagesBucketName
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
       BuildProperties:

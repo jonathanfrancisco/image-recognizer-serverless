@@ -2,13 +2,17 @@ import { APIGatewayProxyEvent, APIGatewayProxyResult, S3Event } from 'aws-lambda
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
+import { RekognitionClient, DetectLabelsCommand } from '@aws-sdk/client-rekognition';
+
 const s3Client = new S3Client({
     region: process.env.AWS_REGION,
-    apiVersion: 'v4',
+});
+
+const rekogClient = new RekognitionClient({
+    region: process.env.AWS_REGION,
 });
 
 export const generatePreSignedUrl = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-    console.log(process.env.AWS_REGION);
     const body = JSON.parse(event.body!);
 
     // Create the presigned URL.
@@ -29,6 +33,7 @@ export const generatePreSignedUrl = async (event: APIGatewayProxyEvent): Promise
             statusCode: 200,
             body: JSON.stringify({
                 data: {
+                    // return recoginzer results db id
                     url: signedUrl,
                 },
             }),
@@ -47,5 +52,42 @@ export const generatePreSignedUrl = async (event: APIGatewayProxyEvent): Promise
 };
 
 export const imageRecognizer = async (event: S3Event) => {
-    console.log('S3 Event: ', event);
+    console.log('S3 Event: ', JSON.stringify(event, null, 2));
+
+    for (const record of event.Records) {
+        const bucketName = record.s3.bucket.name;
+        const key = record.s3.object.key;
+
+        try {
+            const response = await rekogClient.send(
+                new DetectLabelsCommand({
+                    Image: {
+                        S3Object: {
+                            Bucket: bucketName,
+                            Name: key,
+                        },
+                    },
+                }),
+            );
+            console.log(response.Labels);
+
+            response.Labels?.forEach((label) => {
+                console.log(`Confidence: ${label.Confidence}`);
+                console.log(`Name: ${label.Name}`);
+                console.log('Instances:');
+                label.Instances?.forEach((instance) => {
+                    console.log(instance);
+                });
+                console.log('Parents:');
+                label.Parents?.forEach((name) => {
+                    console.log(name);
+                });
+                console.log('-------');
+            });
+
+            // return recoginzer results db id
+        } catch (err) {
+            console.log('Error', err);
+        }
+    }
 };
